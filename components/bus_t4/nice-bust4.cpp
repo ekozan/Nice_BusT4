@@ -43,7 +43,7 @@ namespace esphome {
 
         void NiceBusT4::setup() {
             _uart.begin(BAUD_WORK, SERIAL_8N1, TX_P);
-            # _uart = uart_init(_UART_NO, BAUD_WORK, SERIAL_8N1, SERIAL_FULL, TX_P, 256, false);
+            // _uart = uart_init(_UART_NO, BAUD_WORK, SERIAL_8N1, SERIAL_FULL, TX_P, 256, false);
 
             // Attendre un court instant pour laisser le temps à l'UART de s'initialiser
             delay(500);
