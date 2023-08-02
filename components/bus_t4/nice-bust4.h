@@ -52,6 +52,7 @@ is an intelligent engine, this value is 1 (adr = 1).
 #include "esphome/core/automation.h" // to add Action
 #include "esphome/components/cover/cover.h"
 #include <HardwareSerial.h>
+#include <UART.h>
 #include "esphome/core/helpers.h" // parse strings with built-in tools
 #include <queue>
 
