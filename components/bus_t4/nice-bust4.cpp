@@ -4,7 +4,8 @@
 
 namespace esphome {
     namespace bus_t4 {
-
+        
+        UART _uart;
         static const char *TAG = "bus_t4.cover";
 
         using namespace esphome::cover;
@@ -41,7 +42,10 @@ namespace esphome {
         }
 
         void NiceBusT4::setup() {
-            _uart = uart_init(_UART_NO, BAUD_WORK, SERIAL_8N1, SERIAL_FULL, TX_P, 256, false);
+            _uart.begin(BAUD_WORK, SERIAL_8N1, TX_P);
+            # _uart = uart_init(_UART_NO, BAUD_WORK, SERIAL_8N1, SERIAL_FULL, TX_P, 256, false);
+
+            // Attendre un court instant pour laisser le temps à l'UART de s'initialiser
             delay(500);
 
             // who is online?
@@ -62,11 +66,12 @@ namespace esphome {
                 }
             }
 
-            while (uart_rx_available(_uart) > 0) {
-                uint8_t c = (uint8_t) uart_read_char(_uart);
+             // Wait for incoming data and process it
+              while (_uart.available() > 0) {
+                uint8_t c = _uart.read();
                 this->last_received_byte_millis = millis();
                 this->handle_received_byte(c);
-            }
+              }
 
             // allow sending only after 100ms since last received message
             if (millis() - this->last_received_byte_millis > 100) {
@@ -642,18 +647,22 @@ namespace esphome {
 
         void NiceBusT4::send_array_cmd(const uint8_t *data, size_t len) {
             char br_ch = 0x00;
-            uart_flush(_uart);
+             _uart.flush();
+            
+              // send break at lower baud rate
+              _uart.updateBaudRate(BAUD_BREAK);
+              uint8_t br_ch = 0;
+              _uart.write(&br_ch, 1);
+              _uart.waitTXEmpty();
+              delayMicroseconds(90);
+            
+              // send payload itself
+              _uart.updateBaudRate(BAUD_WORK);
+              uint8_t data[] = { /* Your data here */ };
+              size_t len = sizeof(data) / sizeof(data[0]);
+              _uart.write(data, len);
+              _uart.waitTXEmpty();
 
-            // send break at lower baund rate
-            uart_set_baudrate(_uart, BAUD_BREAK);
-            uart_write(_uart, &br_ch, 1); // send zero at low speed
-            uart_wait_tx_empty(_uart); // wait until the sending is completed. There is an error in the uart.h library (esp8266 core 3.0.2), waiting is not enough for further uart_set_baudrate().
-            delayMicroseconds(90); // add a delay to the wait, otherwise the speed will switch before sending. With a delay on d1-mini, I got the perfect signal, break = 520us
-
-            // send payload itself
-            uart_set_baudrate(_uart, BAUD_WORK);
-            uart_write(_uart, (char *) &data[0], len);
-            uart_wait_tx_empty(_uart); // waiting for the completion of sending
 
             // print to log
             std::string pretty_cmd = format_hex_pretty((uint8_t *) &data[0], len);
