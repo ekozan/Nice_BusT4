@@ -44,7 +44,8 @@ namespace esphome {
         }
 
         void NiceBusT4::setup() {
-            _uart.begin(BAUD_WORK, SERIAL_8N1, TX_PIN);
+            _uart->begin(BAUD_WORK, SERIAL_8N1, TX_P);
+            // _uart = uart_init(_UART_NO, BAUD_WORK, SERIAL_8N1, SERIAL_FULL, TX_P, 256, false);
         
             // Attendre un court instant pour laisser le temps à l'UART de s'initialiser
             delay(500);
@@ -646,29 +647,25 @@ namespace esphome {
         void NiceBusT4::send_array_cmd(std::vector<uint8_t> data) {
             return send_array_cmd((const uint8_t *) data.data(), data.size());
         }
-
+        
         void NiceBusT4::send_array_cmd(const uint8_t *data, size_t len) {
-            char br_ch = 0x00;
-             _uart.flush();
-            
-              // send break at lower baud rate
-              _uart.updateBaudRate(BAUD_BREAK);
-              uint8_t br_ch = 0;
-              _uart.write(&br_ch, 1);
-              _uart.waitTXEmpty();
-              delayMicroseconds(90);
-            
-              // send payload itself
-              _uart.updateBaudRate(BAUD_WORK);
-              uint8_t data[] = { /* Your data here */ };
-              size_t len = sizeof(data) / sizeof(data[0]);
-              _uart.write(data, len);
-              _uart.waitTXEmpty();
-
-
+            _uart->flush(); // Use the -> operator to access members of the pointer
+        
+            // send break at lower baud rate
+            _uart->updateBaudRate(BAUD_BREAK); // Use the -> operator to access members of the pointer
+            uint8_t br_ch = 0;
+            _uart->write(&br_ch, 1); // Use the -> operator to access members of the pointer
+            _uart->waitTXEmpty(); // Use the -> operator to access members of the pointer
+            delayMicroseconds(90);
+        
+            // send payload itself
+            _uart->updateBaudRate(BAUD_WORK); // Use the -> operator to access members of the pointer
+            _uart->write(data, len); // Use the -> operator to access members of the pointer
+            _uart->waitTXEmpty(); // Use the -> operator to access members of the pointer
+        
             // print to log
-            std::string pretty_cmd = format_hex_pretty((uint8_t *) &data[0], len);
-            ESP_LOGI(TAG, "Sent: %S ", pretty_cmd.c_str());
+            std::string pretty_cmd = format_hex_pretty(data, len);
+            ESP_LOGI(TAG, "Sent: %s", pretty_cmd.c_str());
         }
 
         // generating and sending inf commands from yaml configuration
