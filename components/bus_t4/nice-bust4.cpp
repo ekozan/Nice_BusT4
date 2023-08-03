@@ -655,13 +655,13 @@ namespace esphome {
             SerialPort.updateBaudRate(BAUD_BREAK); // Use the -> operator to access members of the pointer
             uint8_t br_ch = 0;
             SerialPort.write(&br_ch, 1); // Use the -> operator to access members of the pointer
-            SerialPort.waitTXEmpty(); // Use the -> operator to access members of the pointer
+            SerialPort.flush(); // Use the -> operator to access members of the pointer
             delayMicroseconds(90);
         
             // send payload itself
             SerialPort.updateBaudRate(BAUD_WORK); // Use the -> operator to access members of the pointer
             SerialPort.write(data, len); // Use the -> operator to access members of the pointer
-            SerialPort.waitTXEmpty(); // Use the -> operator to access members of the pointer
+            SerialPort.flush(); // Use the -> operator to access members of the pointer
         
             // print to log
             std::string pretty_cmd = format_hex_pretty(data, len);
