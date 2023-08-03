@@ -47,6 +47,7 @@ is an intelligent engine, this value is 1 (adr = 1).
 #pragma once
 
 #include "esphome.h"
+#include <Arduino.h>
 #include "esphome/core/component.h"
 #include "esphome/core/automation.h" // to add Action
 #include "esphome/components/cover/cover.h"
