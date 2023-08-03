@@ -5,8 +5,10 @@
 namespace esphome {
     namespace bus_t4 {
         
+
         HardwareSerial& _uart = Serial;
         static const char *TAG = "bus_t4.cover";
+
 
         using namespace esphome::cover;
 
@@ -42,15 +44,15 @@ namespace esphome {
         }
 
         void NiceBusT4::setup() {
-            _uart.begin(BAUD_WORK, SERIAL_8N1, TX_P);
-            // _uart = uart_init(_UART_NO, BAUD_WORK, SERIAL_8N1, SERIAL_FULL, TX_P, 256, false);
-
+            _uart.begin(BAUD_WORK, SERIAL_8N1, TX_PIN);
+        
             // Attendre un court instant pour laisser le temps à l'UART de s'initialiser
             delay(500);
-
+        
             // who is online?
             this->tx_buffer.push(gen_inf_cmd(0x00, 0xff, FOR_ALL, WHO, GET, 0x00));
         }
+
 
         void NiceBusT4::loop() {
             // retry detection every 10 seconds
