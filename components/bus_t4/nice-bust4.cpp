@@ -8,7 +8,7 @@ namespace esphome {
 
         //HardwareSerial& SerialPort = Serial;
         static const char *TAG = "bus_t4.cover";
-        HardwareSerial SerialPort(1)
+        HardwareSerial SerialPort(1);
 
         using namespace esphome::cover;
 
