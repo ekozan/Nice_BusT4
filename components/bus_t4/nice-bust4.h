@@ -66,7 +66,7 @@ namespace esphome {
 	static const uint8_t START_CODE = 0x55; /* packet start byte */
 
 
-
+  	HardwareSerial *_uart;
 
         /* esp network settings
           The series can take values from 0 to 63, by default 0
