@@ -6,7 +6,7 @@ namespace esphome {
     namespace bus_t4 {
         
 
-        HardwareSerial& _uart = Serial;
+        //HardwareSerial& _uart = Serial;
         static const char *TAG = "bus_t4.cover";
 
 
