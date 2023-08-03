@@ -44,7 +44,7 @@ namespace esphome {
         }
 
         void NiceBusT4::setup() {
-            SerialPort->begin(BAUD_WORK, SERIAL_8N1, TX_PIN);
+            SerialPort.begin(BAUD_WORK, SERIAL_8N1, TX_PIN);
             // SerialPort = uart_init(SerialPort_NO, BAUD_WORK, SERIAL_8N1, SERIAL_FULL, TX_P, 256, false);
         
             // Attendre un court instant pour laisser le temps à l'UART de s'initialiser
@@ -70,8 +70,8 @@ namespace esphome {
             }
 
              // Wait for incoming data and process it
-              while (SerialPort->available() > 0) {
-                uint8_t c = SerialPort->read();
+              while (SerialPort.available() > 0) {
+                uint8_t c = SerialPort.read();
                 this->last_received_byte_millis = millis();
                 this->handle_received_byte(c);
               }
@@ -649,19 +649,19 @@ namespace esphome {
         }
         
         void NiceBusT4::send_array_cmd(const uint8_t *data, size_t len) {
-            SerialPort->flush(); // Use the -> operator to access members of the pointer
+            SerialPort.flush(); // Use the -> operator to access members of the pointer
         
             // send break at lower baud rate
-            SerialPort->updateBaudRate(BAUD_BREAK); // Use the -> operator to access members of the pointer
+            SerialPort.updateBaudRate(BAUD_BREAK); // Use the -> operator to access members of the pointer
             uint8_t br_ch = 0;
-            SerialPort->write(&br_ch, 1); // Use the -> operator to access members of the pointer
-            SerialPort->waitTXEmpty(); // Use the -> operator to access members of the pointer
+            SerialPort.write(&br_ch, 1); // Use the -> operator to access members of the pointer
+            SerialPort.waitTXEmpty(); // Use the -> operator to access members of the pointer
             delayMicroseconds(90);
         
             // send payload itself
-            SerialPort->updateBaudRate(BAUD_WORK); // Use the -> operator to access members of the pointer
-            SerialPort->write(data, len); // Use the -> operator to access members of the pointer
-            SerialPort->waitTXEmpty(); // Use the -> operator to access members of the pointer
+            SerialPort.updateBaudRate(BAUD_WORK); // Use the -> operator to access members of the pointer
+            SerialPort.write(data, len); // Use the -> operator to access members of the pointer
+            SerialPort.waitTXEmpty(); // Use the -> operator to access members of the pointer
         
             // print to log
             std::string pretty_cmd = format_hex_pretty(data, len);
