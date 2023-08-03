@@ -45,8 +45,6 @@ is an intelligent engine, this value is 1 (adr = 1).
   PARENTAL OPEN 2   55 0c 00 ff 00 66 01 05 9D 01 82 06 64 E1 0c
 */
 
-#pragma once
-
 #include "esphome.h"
 #include "esphome/core/component.h"
 #include "esphome/core/automation.h" // to add Action
@@ -59,12 +57,14 @@ namespace esphome {
     namespace bus_t4 {
         /* for short reference to class members */
         using namespace esphome::cover;
+	
+	static const int UART_NO = 0;     /* uart number */
+	static const byte TX_PIN = 1;     /* pin Tx */
+	static const uint32_t BAUD_BREAK = 9200; /* baudrate for a long pulse before the packet */
+	static const uint32_t BAUD_WORK = 19200; /* working baudrate */
+	static const uint8_t START_CODE = 0x55; /* packet start byte */
 
-        static const int _UART_NO = UART0; /* uart number */
-        static const int TX_P = 1;         /* pin Tx */
-        static const uint32_t BAUD_BREAK = 9200; /* baudrate for a long pulse before the packet */
-        static const uint32_t BAUD_WORK = 19200; /* working baudrate */
-        static const uint8_t START_CODE = 0x55; /* packet start byte */
+
 
 
         /* esp network settings
@@ -80,18 +80,19 @@ namespace esphome {
           for the rest, I did not check the numbers
           6th byte of CMD and INF packets
         */
-        enum mes_type : uint8_t {
-            CMD = 0x01,  /* number verified, sending commands to automation */
-            //  LSC = 0x02,  /* working with script lists */
-            //  LST = 0x03,  /* work with automatic lists */
-            //  POS = 0x04,  /* request and change the position of automation */
-            //  GRP = 0x05,  /* sending commands to a group of automations indicating the bit mask of the motor */
-            //  SCN = 0x06,  /* working with scripts */
-            //  GRC = 0x07,  /* sending commands to a group of automations created through Nice Screen Configuration Tool */
-            INF = 0x08,  /* returns or sets device information */
-            //  LGR = 0x09,  /* working with group lists */
-            //  CGR = 0x0A,  /* work with categories of groups created through Nice Screen Configuration Tool */
-        };
+	
+	enum mes_type : uint8_t {
+	    CMD = 0x01,  /* number verified, sending commands to automation */
+	    LSC = 0x02,  /* working with script lists */
+	    LST = 0x03,  /* work with automatic lists */
+	    POS = 0x04,  /* request and change the position of automation */
+	    GRP = 0x05,  /* sending commands to a group of automations indicating the bit mask of the motor */
+	    SCN = 0x06,  /* working with scripts */
+	    GRC = 0x07,  /* sending commands to a group of automations created through Nice Screen Configuration Tool */
+	    INF = 0x08,  /* returns or sets device information */
+	    LGR = 0x09,  /* working with group lists */
+	    CGR = 0x0A,  /* work with categories of groups created through Nice Screen Configuration Tool */
+	};
 
         /*
         command menu in oview hierarchy
