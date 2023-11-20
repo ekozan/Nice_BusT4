@@ -2,14 +2,16 @@
 #include "esphome/core/log.h"
 #include "esphome/core/helpers.h"  // to use string helper functions
 
+
 namespace esphome {
     namespace bus_t4 {
         
 
         //HardwareSerial& SerialPort = Serial;
         static const char *TAG = "bus_t4.cover";
-        HardwareSerial SerialPort(1);
-
+        //HardwareSerial SerialPort(1);
+        SPIClass spi;
+        #define CS_PIN 5 // Change this to the CS/SS pin you are using for SPI
         using namespace esphome::cover;
 
         CoverTraits NiceBusT4::get_traits() {
@@ -44,10 +46,12 @@ namespace esphome {
         }
 
         void NiceBusT4::setup() {
-            SerialPort.begin(BAUD_WORK, SERIAL_8N1, TX_PIN);
-            // SerialPort = uart_init(SerialPort_NO, BAUD_WORK, SERIAL_8N1, SERIAL_FULL, TX_P, 256, false);
+            spi.begin();
+            spi.beginTransaction(SPISettings(BAUD_WORK, MSBFIRST, SPI_MODE0));
+            pinMode(CS_PIN, OUTPUT);
+            digitalWrite(CS_PIN, HIGH); // Set CS_PIN high initially
         
-            // Attendre un court instant pour laisser le temps à l'UART de s'initialiser
+            // Wait for a short moment to let the SPI interface initialize
             delay(500);
         
             // who is online?
@@ -70,8 +74,8 @@ namespace esphome {
             }
 
              // Wait for incoming data and process it
-              while (SerialPort.available() > 0) {
-                uint8_t c = SerialPort.read();
+              while (spi.available() > 0) {
+                uint8_t c = spi.read();
                 this->last_received_byte_millis = millis();
                 this->handle_received_byte(c);
               }
