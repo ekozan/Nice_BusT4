@@ -10,8 +10,6 @@ namespace esphome {
         //HardwareSerial& SerialPort = Serial;
         static const char *TAG = "bus_t4.cover";
         //HardwareSerial SerialPort(1);
-        SPIClass spi;
-        #define CS_PIN 5 // Change this to the CS/SS pin you are using for SPI
         using namespace esphome::cover;
 
         CoverTraits NiceBusT4::get_traits() {
@@ -46,8 +44,8 @@ namespace esphome {
         }
 
         void NiceBusT4::setup() {
-            spi.begin();
-            spi.beginTransaction(SPISettings(BAUD_WORK, MSBFIRST, SPI_MODE0));
+            SPI.begin();
+            SPI.beginTransaction(SPISettings(BAUD_WORK, MSBFIRST, SPI_MODE0));
             pinMode(CS_PIN, OUTPUT);
             digitalWrite(CS_PIN, HIGH); // Set CS_PIN high initially
         
