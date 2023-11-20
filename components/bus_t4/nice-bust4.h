@@ -54,6 +54,7 @@ is an intelligent engine, this value is 1 (adr = 1).
 #include <HardwareSerial.h>
 #include "esphome/core/helpers.h" // parse strings with built-in tools
 #include <queue>
+#include "esphome/components/spi/spi.h"
 
 namespace esphome {
     namespace bus_t4 {
@@ -321,7 +322,9 @@ struct packet_rsp_body_t {
 };
 */
 
-        class NiceBusT4 : public Component, public Cover {
+        class NiceBusT4 : public Component,
+			  public Cover,
+                          public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_HIGH, spi::CLOCK_PHASE_TRAILING, spi::DATA_RATE_8MHZ> {
         public:
             // drive settings
             bool autocls_flag; // Auto close - L1
