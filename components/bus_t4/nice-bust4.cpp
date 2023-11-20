@@ -43,11 +43,22 @@ namespace esphome {
             }
         }
 
+
         void NiceBusT4::setup() {
-            SPI.begin();
-            SPI.beginTransaction(SPISettings(BAUD_WORK, MSBFIRST, SPI_MODE0));
-            pinMode(CS_PIN, OUTPUT);
-            digitalWrite(CS_PIN, HIGH); // Set CS_PIN high initially
+            spi::SPIBusConfig spi_config;
+            spi_config.miso_pin = MISO_PIN;
+            spi_config.mosi_pin = MOSI_PIN;
+            spi_config.sclk_pin = CLK_PIN;
+        
+            auto spi = new spi::SPIDevice();
+            spi->set_speed(HZ_TO_KHZ(BAUD_WORK));
+            spi->set_mode(0); // Set your desired SPI mode here
+            spi->set_bits_per_word(8);
+        
+            auto spi_component = new spi::SPIDeviceComponent();
+            spi_component->set_bus_id(spi_config);
+        
+            App.register_component(spi_component);
         
             // Wait for a short moment to let the SPI interface initialize
             delay(500);
@@ -55,6 +66,7 @@ namespace esphome {
             // who is online?
             this->tx_buffer.push(gen_inf_cmd(0x00, 0xff, FOR_ALL, WHO, GET, 0x00));
         }
+
 
 
         void NiceBusT4::loop() {
