@@ -324,7 +324,8 @@ struct packet_rsp_body_t {
 
         class NiceBusT4 : public Component,
 			  public Cover,
-                          public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_HIGH, spi::CLOCK_PHASE_TRAILING, spi::DATA_RATE_8MHZ> {
+                          public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_HIGH,
+                                                 spi::CLOCK_PHASE_TRAILING, spi::DATA_RATE_1MHZ> {
         public:
             // drive settings
             bool autocls_flag; // Auto close - L1
