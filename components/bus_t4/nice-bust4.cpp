@@ -71,7 +71,7 @@ void NiceBusT4::control(const CoverCall &call) {
 void NiceBusT4::setup() {
 //  delay (5000);   // пока привод не стартанёт, на команды отвечать не будет
 
-    CanSerial.begin(BAUD_WORK, SERIAL_8N1, 26, 25 );
+    CanSerial.begin(BAUD_WORK, SERIAL_8N1, 1, 3 );
 
   //  delay (500);
   //  this->last_init_command_ = 0;
