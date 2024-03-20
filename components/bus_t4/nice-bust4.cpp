@@ -56,7 +56,7 @@ void NiceBusT4::control(const CoverCall &call) {
       } else { // Произвольное положение
         position_hook_value = (_pos_opn - _pos_cls) * newpos + _pos_cls;
         ESP_LOGI(TAG, "Требуемое положение привода: %d", position_hook_value);
-        if sition_hook_value > _pos_usl) {
+        if (position_hook_value > _pos_usl) {
           position_hook_type = STOP_UP;
           if (current_operation != COVER_OPERATION_OPENING) send_cmd(OPEN);
         } else {
