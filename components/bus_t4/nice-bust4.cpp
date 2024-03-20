@@ -4,7 +4,7 @@
 
 
 
-
+HardwareSerial _uart(1); // Utilisation de UART1 sur ESP32
 
 
 namespace esphome {
@@ -56,7 +56,7 @@ void NiceBusT4::control(const CoverCall &call) {
       } else { // Произвольное положение
         position_hook_value = (_pos_opn - _pos_cls) * newpos + _pos_cls;
         ESP_LOGI(TAG, "Требуемое положение привода: %d", position_hook_value);
-        if (position_hook_value > _pos_usl) {
+        if sition_hook_value > _pos_usl) {
           position_hook_type = STOP_UP;
           if (current_operation != COVER_OPERATION_OPENING) send_cmd(OPEN);
         } else {
@@ -71,8 +71,9 @@ void NiceBusT4::control(const CoverCall &call) {
 void NiceBusT4::setup() {
 //  delay (5000);   // пока привод не стартанёт, на команды отвечать не будет
 
-  _uart =  uart_init(_UART_NO, BAUD_WORK, SERIAL_8N1, SERIAL_FULL, TX_P, 256, false);
-//  delay (500);
+  _uart.begin(BAUD_WORK, SERIAL_8N1, TX_P);
+  
+  //  delay (500);
   //  this->last_init_command_ = 0;
   // кто в сети?
 //  this->tx_buffer_.push(gen_inf_cmd(0x00, 0xff, FOR_ALL, WHO, GET, 0x00));
@@ -112,11 +113,11 @@ void NiceBusT4::loop() {
   }
 
 
-  while (uart_rx_available(_uart) > 0) {
-    uint8_t c = (uint8_t)uart_read_char(_uart);                // считываем байт
-    this->handle_char_(c);                                     // отправляем байт на обработку
-    this->last_uart_byte_ = now;
-  } //while
+  while (_uart.available() > 0) {
+    uint8_t c = (uint8_t)_uart.read(); // Lire le caractère reçu
+    handle_char(c);                    // Traitement du caractère reçu
+    last_uart_byte = millis();         // Mettre à jour le temps du dernier octet reçu
+  }
 
   if (this->ready_to_tx_) {   // если можно отправлять
     if (!this->tx_buffer_.empty()) {  // если есть что отправлять
@@ -915,27 +916,33 @@ data.erase(remove_if(data.begin(), data.end(), [](const unsigned char ch) {
 void NiceBusT4::send_array_cmd (std::vector<uint8_t> data) {          // отправляет break + подготовленную ранее в массиве команду
   return send_array_cmd((const uint8_t *)data.data(), data.size());
 }
-void NiceBusT4::send_array_cmd (const uint8_t *data, size_t len) {
-  // отправка данных в uart
 
-  char br_ch = 0x00;                                               // для break
-  uart_flush(_uart);                                               // очищаем uart
-  uart_set_baudrate(_uart, BAUD_BREAK);                            // занижаем бодрэйт
-  uart_write(_uart, &br_ch, 1);                                    // отправляем ноль на низкой скорости, длиинный ноль
-  //uart_write(_uart, (char *)&dummy, 1);
-  uart_wait_tx_empty(_uart);                                       // ждём, пока отправка завершится. Здесь в библиотеке uart.h (esp8266 core 3.0.2) ошибка, ожидания недостаточно при дальнейшем uart_set_baudrate().
-  delayMicroseconds(90);                                          // добавляем задержку к ожиданию, иначе скорость переключится раньше отправки. С задержкой на d1-mini я получил идеальный сигнал, break = 520us
-  uart_set_baudrate(_uart, BAUD_WORK);                             // возвращаем рабочий бодрэйт
-  uart_write(_uart, (char *)&data[0], len);                                // отправляем основную посылку
-  //uart_write(_uart, (char *)raw_cmd_buf, sizeof(raw_cmd_buf));
-  uart_wait_tx_empty(_uart);                                       // ждем завершения отправки
+void NiceBusT4::send_array_cmd(const uint8_t *data, size_t len) {
+    // Envoi des données via l'UART
 
+    char br_ch = 0x00;  // Pour le break
+    _uart.flush();  // Effacer le tampon de l'UART
+    _uart.updateBaudRate(BAUD_BREAK);  // Réduire le débit de l'UART
+    _uart.write((const uint8_t *)&br_ch, 1);  // Envoyer un zéro à une vitesse plus lente, un zéro long
+    while (_uart.busy());  // Attendre la fin de l'envoi. Cette instruction peut varier selon la bibliothèque utilisée pour l'ESP32.
 
+    delayMicroseconds(90);  // Ajouter un délai à l'attente, sinon la vitesse changera avant l'envoi.
 
-  std::string pretty_cmd = format_hex_pretty((uint8_t*)&data[0], len);                    // для вывода команды в лог
-  ESP_LOGI(TAG,  "Отправлено: %S ", pretty_cmd.c_str() );
+    _uart.updateBaudRate(BAUD_WORK);  // Rétablir le débit de l'UART
+    _uart.write(data, len);  // Envoyer le paquet principal
+    while (_uart.busy());  // Attendre la fin de l'envoi
 
+    // Code de journalisation pour afficher la commande envoyée
+    String pretty_cmd;
+    for (size_t i = 0; i < len; i++) {
+        char hex_buffer[5];
+        snprintf(hex_buffer, sizeof(hex_buffer), "%02X ", data[i]);
+        pretty_cmd += hex_buffer;
+    }
+    ESP_LOGI(TAG, "Отправлено: %s", pretty_cmd.c_str());
 }
+
+
 
 
 // генерация и отправка inf команд из yaml конфигурации
