@@ -115,7 +115,7 @@ void NiceBusT4::loop() {
 
   while (CanSerial.available() > 0) {
     uint8_t c = (uint8_t)CanSerial.read(); // Lire le caractère reçu
-    this->handle_char(c);                    // Traitement du caractère reçu
+    this->handle_char_(c);                    // Traitement du caractère reçu
     last_uart_byte = millis();         // Mettre à jour le temps du dernier octet reçu
   }
 
