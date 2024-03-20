@@ -4,7 +4,7 @@
 
 
 
-HardwareSerial _uart(1); // Utilisation de UART1 sur ESP32
+HardwareSerial CanSerial(1); // Utilisation de UART1 sur ESP32
 
 
 namespace esphome {
@@ -71,8 +71,8 @@ void NiceBusT4::control(const CoverCall &call) {
 void NiceBusT4::setup() {
 //  delay (5000);   // пока привод не стартанёт, на команды отвечать не будет
 
-    _uart->begin(BAUD_WORK, SERIAL_8N1, TX_P, RX_P);
-      
+    CanSerial.begin(BAUD_WORK, SERIAL_8N1, 26, 25 );
+
   //  delay (500);
   //  this->last_init_command_ = 0;
   // кто в сети?
