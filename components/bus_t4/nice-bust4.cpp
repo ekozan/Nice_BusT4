@@ -71,7 +71,7 @@ void NiceBusT4::control(const CoverCall &call) {
 void NiceBusT4::setup() {
 //  delay (5000);   // пока привод не стартанёт, на команды отвечать не будет
 
-  _uart.begin(BAUD_WORK, SERIAL_8N1, TX_P);
+  uart_begin(*_uart,BAUD_WORK, SERIAL_8N1, TX_P);
   
   //  delay (500);
   //  this->last_init_command_ = 0;
