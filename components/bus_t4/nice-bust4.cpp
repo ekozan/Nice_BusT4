@@ -116,7 +116,7 @@ void NiceBusT4::loop() {
   while (CanSerial.available() > 0) {
     uint8_t c = (uint8_t)CanSerial.read(); // Lire le caractère reçu
     this->handle_char_(c);                    // Traitement du caractère reçu
-    last_uart_byte = millis();         // Mettre à jour le temps du dernier octet reçu
+    this->last_uart_byte_ = millis();         // Mettre à jour le temps du dernier octet reçu
   }
 
   if (this->ready_to_tx_) {   // если можно отправлять
@@ -924,13 +924,13 @@ void NiceBusT4::send_array_cmd(const uint8_t *data, size_t len) {
     CanSerial.flush();  // Effacer le tampon de l'UART
     CanSerial.updateBaudRate(BAUD_BREAK);  // Réduire le débit de l'UART
     CanSerial.write((const uint8_t *)&br_ch, 1);  // Envoyer un zéro à une vitesse plus lente, un zéro long
-    while (CanSerial.busy());  // Attendre la fin de l'envoi. Cette instruction peut varier selon la bibliothèque utilisée pour l'ESP32.
+    while (CanSerial.availableForWrite() < 128);
 
     delayMicroseconds(90);  // Ajouter un délai à l'attente, sinon la vitesse changera avant l'envoi.
 
     CanSerial.updateBaudRate(BAUD_WORK);  // Rétablir le débit de l'UART
     CanSerial.write(data, len);  // Envoyer le paquet principal
-    while (CanSerial.busy());  // Attendre la fin de l'envoi
+    while (CanSerial.availableForWrite() < len); // Attendre la fin de l'envoi
 
     // Code de journalisation pour afficher la commande envoyée
     String pretty_cmd;
