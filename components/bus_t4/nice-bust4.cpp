@@ -168,7 +168,7 @@ namespace esphome {
                 ESP_LOGE(TAG, "Command not available for this device");
             }
 
-            if ((data[1] == (data[12] + 0xd)) && (data[13] == NOERR)) { // if evt
+            if (((data[11] == 0x18) || (data[11] == 0x19)) && (data[13] == NOERR)) { // if evt
                 ESP_LOGD(TAG, "An EVT data packet has been received. Data size %d ", data[12]);
                 std::vector<uint8_t> vec_data(this->rx_buffer.begin() + 14, this->rx_buffer.end() - 2);
                 std::string pretty_data = format_hex_pretty(vec_data);
@@ -286,7 +286,7 @@ namespace esphome {
                 }
 
                 // if responses to GET requests that came without errors from the drive
-                if ((data[6] == INF) && (data[9] == FOR_CU) && (data[11] == SET - 0x80) && (data[13] == NOERR)) { // interested in responses to SET requests that came without errors from the drive
+                 if ((data[6] == INF) && (data[9] == FOR_CU)  && (data[11] == SET - 0x80) && (data[13] == NOERR)) { // interested in responses to SET requests that came without errors from the drive
                     switch (data[10]) { // cmd_submnu
                         case AUTOCLS:
                             tx_buffer.push(gen_inf_cmd(FOR_CU, AUTOCLS, GET)); // Auto close
@@ -303,7 +303,7 @@ namespace esphome {
                 }
 
                 // if responses to SET requests that came without errors from the drive
-                if ((data[6] == INF) && (data[9] == FOR_ALL) && (data[11] == GET - 0x80) && (data[13] == NOERR)) { // interested in FOR_ALL responses to GET requests that came without errors
+                if ((data[6] == INF) && (data[9] == FOR_ALL)  && ((data[11] == GET - 0x80) || (data[11] == GET - 0x81)) && (data[13] == NOERR)) {  // interested in FOR_ALL responses to GET requests that came without errors
 
                     switch (data[10]) {
                         case MAN:
@@ -363,7 +363,8 @@ namespace esphome {
                 if ((data[9] == 0x0A) && (data[10] == 0x26) && (data[11] == 0x41) && (data[12] == 0x08) && (data[13] == NOERR)) {
                     ESP_LOGCONFIG(TAG, "Button %X, remote control number: %X%X%X%X", vec_data[0] / 0x10, vec_data[0] % 0x10, vec_data[1], vec_data[2], vec_data[3]);
                 }
-            } else if ((data[14] == NOERR) && (data[1] > 0x0d)) { // otherwise, the Responce packet - confirmation of the received command
+            //} else if ((data[14] == NOERR) && (data[1] > 0x0d)) { // otherwise, the Responce packet - confirmation of the received command
+              } else if ((data[1] > 0x0d)) { // otherwise, the Responce packet - confirmation of the received command
                 ESP_LOGD(TAG, "RSP package received");
                 std::vector<uint8_t> vec_data(this->rx_buffer.begin() + 12, this->rx_buffer.end() - 3);
                 std::string pretty_data = format_hex_pretty(vec_data);
