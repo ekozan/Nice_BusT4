@@ -32,16 +32,15 @@ namespace esphome {
                             this->send_cmd(CLOSE);
                         }
                     } else {
-                      
-                      position_hook_value = (_pos_opn - _pos_cls) * newpos + _pos_cls;
+                      position_hook_value = (this->_pos_opn - this->_pos_cls) * pos + this->_pos_cls;
                       ESP_LOGI(TAG, "position requise de l'actionneur: %d", position_hook_value);
                       
-                      if (position_hook_value > _pos_usl) {
+                      if (position_hook_value > this->_pos_usl) {
                         position_hook_type = STOP_UP;
-                        if (current_operation != COVER_OPERATION_OPENING) send_cmd(OPEN);
+                        if (this->current_operation != COVER_OPERATION_OPENING) this->send_cmd(OPEN);
                       } else {
                         position_hook_type = STOP_DOWN;
-                        if (current_operation != COVER_OPERATION_CLOSING) send_cmd(CLOSE);
+                        if (this->current_operation != COVER_OPERATION_CLOSING) this->send_cmd(CLOSE);
                       }
                                     
                       //uint8_t data[3] = {CONTROL, SET_POSITION, (uint8_t)(pos * 100)};
