@@ -258,15 +258,15 @@ void NiceBusT4::parse_status_packet (const std::vector<uint8_t> &data) {
           switch (data[14]) { //14
             case SLIDING:
               this->class_gate_ = SLIDING;
-              //        ESP_LOGD(TAG, "Тип ворот: Откатные %#X ", data[14]);
+              ESP_LOGD(TAG, "Gate type: Sliding %#X ", data[14]);
               break;
             case SECTIONAL:
               this->class_gate_ = SECTIONAL;
-              //        ESP_LOGD(TAG, "Тип ворот: Секционные %#X ", data[14]);
+              ESP_LOGD(TAG, "Gate type: Sectional %#X ", data[14]);
               break;
             case SWING:
               this->class_gate_ = SWING;
-              //        ESP_LOGD(TAG, "Тип ворот: Распашные %#X ", data[14]);
+              ESP_LOGD(TAG, "Gate type: Swing %#X ", data[14]);
               break;
             case BARRIER:
               this->class_gate_ = BARRIER;
@@ -278,23 +278,23 @@ void NiceBusT4::parse_status_packet (const std::vector<uint8_t> &data) {
               break;
           }  // switch 14
           break; //  TYPE_M
-        case INF_IO: // ответ на запрос положения концевика откатных ворот
+        case INF_IO: // response to a request for the position of the sliding gate limit switch
           switch (data[16]) { //16
             case 0x00:
-              ESP_LOGI(TAG, "  Концевик не сработал ");
+              ESP_LOGI(TAG, "  End switch didn't work ");
               break; // 0x00
             case 0x01:
-              ESP_LOGI(TAG, "  Концевик на закрытие ");
+              ESP_LOGI(TAG, "  End switch for closing ");
               this->position = COVER_CLOSED;
               break; //  0x01
             case 0x02:
-              ESP_LOGI(TAG, "  Концевик на открытие ");
+              ESP_LOGI(TAG, "  End switch for opening ");
               this->position = COVER_OPEN;
               break; // 0x02
 
           }  // switch 16
           this->publish_state_if_changed();  // публикуем состояние
-
+          this->last_received_status_millis = millis();
           break; //  INF_IO
 
 
@@ -308,21 +308,26 @@ void NiceBusT4::parse_status_packet (const std::vector<uint8_t> &data) {
           else {  
             this->_max_opn = (data[14] << 8) + data[15];
           }
-          ESP_LOGI(TAG, "Максимальное положение энкодера: %d", this->_max_opn);
+          ESP_LOGI(TAG, "Maximum encoder position: %d", this->_max_opn);
           break;
 
         case POS_MIN:
           this->_pos_cls = (data[14] << 8) + data[15];
-          ESP_LOGI(TAG, "Положение закрытых ворот: %d", this->_pos_cls);
+          ESP_LOGI(TAG, "Closed gate position: %d", this->_pos_cls);
           break;
 
         case POS_MAX:
           if (((data[14] << 8) + data[15])>0x00) { // если в ответе от привода есть данные о положении открытия
           this->_pos_opn = (data[14] << 8) + data[15];}
-          ESP_LOGI(TAG, "Положение открытых ворот: %d", this->_pos_opn);
+          ESP_LOGI(TAG, "Opened gate position: %d", this->_pos_opn);
           break;
 
         case CUR_POS:
+          this->_pos_usl = (data[14] << 8) + data[15];
+          this->position = (_pos_usl - _pos_cls) * 1.0f / (_pos_opn - _pos_cls);
+          ESP_LOGI(TAG, "Current gate position: %d, position in %%: %f", _pos_usl, (_pos_usl - _pos_cls) * 100.0f / (_pos_opn - _pos_cls));
+          this->publish_state_if_changed();
+
           if (is_walky)
             this->update_position(data[15]);
           else
@@ -758,19 +763,24 @@ void NiceBusT4::dump_config() {    //  добавляем в  лог инфор�
   /*ESP_LOGCONFIG(TAG, "  Address: 0x%02X%02X", *this->header_[1], *this->header_[2]);*/
   switch (this->class_gate_) {
     case SLIDING:
-      ESP_LOGCONFIG(TAG, "  Тип: Откатные ворота");
+      this->gate_class = SLIDING;
+      //        ESP_LOGD(TAG, "Gate type: Sliding %#X ", data[14]);
       break;
     case SECTIONAL:
-      ESP_LOGCONFIG(TAG, "  Тип: Секционные ворота");
+      this->gate_class = SECTIONAL;
+      //        ESP_LOGD(TAG, "Gate type: Sectional %#X ", data[14]);
       break;
     case SWING:
-      ESP_LOGCONFIG(TAG, "  Тип: Распашные ворота");
+      this->gate_class = SWING;
+      //        ESP_LOGD(TAG, "Gate type: Swing %#X ", data[14]);
       break;
     case BARRIER:
-      ESP_LOGCONFIG(TAG, "  Тип: Шлагбаум");
+      this->gate_class = BARRIER;
+      //        ESP_LOGD(TAG, "Gate type: Barrier %#X ", data[14]);
       break;
     case UPANDOVER:
-      ESP_LOGCONFIG(TAG, "  Тип: Подъёмно-поворотные ворота");
+      this->gate_class = UPANDOVER;
+      //        ESP_LOGD(TAG, "Gate type: up-and-over %#X ", data[14]);
       break;
     default:
       ESP_LOGCONFIG(TAG, "  Тип: Неизвестные ворота, 0x%02X", this->class_gate_);
