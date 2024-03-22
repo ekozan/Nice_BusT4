@@ -1,46 +1,49 @@
 /*
   Nice BusT4
-  Обмен данными по UART на скорости 19200 8n1
-  Перед пакетом с данными отправляется break длительностью 519us (10 бит)
-  Содержимое пакета, которое удалось понять, описано в структуре packet_cmd_body_t
+  UART communication at 19200 8n1 speed
+  Before the data packet, a break is sent with a duration of 519us (10 bits)
+  The contents of the packet that could be understood are described in the structure packet_cmd_body_t
 
- 
-
-  Для Oview к адресу всегда прибавляется 80.
-  Адрес контроллера ворот без изменений.
+  For Oview, 80 is always added to the address.
+  Gate controller address unchanged.
 
 
-Подключение
+Connection
 
 BusT4                       ESP8266
 
-Стенка устройства        Rx Tx GND
+Device Rx Tx GND
 9  7  5  3  1  
 10 8  6  4  2
-место для кабеля
+place for cable
             1 ---------- Rx
             2 ---------- GND
             4 ---------- Tx
-            5 ---------- +24V
+            5 ---------- VCC (24-34V DC)
 
 
+From the manual nice_dmbm_integration_protocol.pdf
 
-
-Из мануала nice_dmbm_integration_protocol.pdf
-
-• ADR: это адрес сети NICE, где находятся устройства, которыми вы хотите управлять. Это может быть значение от 1 до 63 (от 1 до 3F).
-Это значение должно быть в HEX. Если адресатом является модуль интеграции на DIN-BAR, это значение равно 0 (adr = 0), если адресат
-является интеллектуальным двигателем, это значение равно 1 (adr = 1).
-• EPT: это адрес двигателя Nice, входящего в сетевой ADR. Это может быть значение от 1 до 127. Это значение должно быть в HEX.
-• CMD: это команда, которую вы хотите отправить по назначению (ADR, EPT).
-• PRF: команда установки профиля.
-• FNC: это функция, которую вы хотите отправить по назначению (ADR, EPT).
-• EVT: это событие, которое отправляется в пункт назначения (ADR, EPT).
-
-
-
+• ADR: This is the address of the NICE network where the devices you want to manage are located. This can be a value from 1 to 63 (1 to 3F).
+This value must be in HEX. If the destination is an integration module on DIN-BAR, this value is 0 (adr = 0) if the destination is
+is an intelligent engine, this value is 1 (adr = 1).
+• EPT: This is the address of the Nice engine included in the network ADR. It can be a value between 1 and 127. This value must be in HEX.
+• CMD: This is the command you want to send to the destination (ADR, EPT).
+• PRF: profile setup command.
+• FNC: This is the function you want to send to the destination (ADR, EPT).
+• EVT: This is the event that is sent to the destination (ADR, EPT).
 */
 
+/*
+  OVIEW command dumps
+
+  SBS               55 0c 00 ff 00 66 01 05 9D 01 82 01 64 E6 0c
+  STOP              55 0c 00 ff 00 66 01 05 9D 01 82 02 64 E5 0c
+  OPEN              55 0c 00 ff 00 66 01 05 9D 01 82 03 00 80 0c
+  CLOSE             55 0c 00 ff 00 66 01 05 9D 01 82 04 64 E3 0c
+  PARENTAL OPEN 1   55 0c 00 ff 00 66 01 05 9D 01 82 05 64 E2 0c
+  PARENTAL OPEN 2   55 0c 00 ff 00 66 01 05 9D 01 82 06 64 E1 0c
+*/
 
 #pragma once
 
@@ -62,46 +65,41 @@ namespace bus_t4 {
 using namespace esphome::cover;
 //using esp8266::timeoutTemplate::oneShotMs;
 
-// static const int _UART_NO=UART0; /* номер uart */
-static const int TX_P = 1;         /* пин Tx */
-static const uint32_t BAUD_BREAK = 9200; /* бодрэйт для длинного импульса перед пакетом */
-static const uint32_t BAUD_WORK = 19200; /* рабочий бодрэйт */
-static const uint8_t START_CODE = 0x55; /*стартовый байт пакета */
+static const int TX_P = 1;         /* pin Tx */
+static const uint32_t BAUD_BREAK = 9200; /* baudrate for a long pulse before the packet */
+static const uint32_t BAUD_WORK = 19200; /* working baudrate */
+static const uint8_t START_CODE = 0x55; /* packet start byte */
+
 
 static const float CLOSED_POSITION_THRESHOLD = 0.007;  // Значение положения привода в процентах, ниже которого ворота считаются полностью закрытыми
 static const uint32_t POSITION_UPDATE_INTERVAL = 500;  // Интервал обновления текущего положения привода, мс
 
-/* сетевые настройки esp
-  Ряд может принимать значения от 0 до 63, по-умолчанию 0
-  Адрес OVIEW начинается с 8
 
-  При объединении в сеть несколько приводов с OXI необходимо для разных приводов указать разные ряды.
-  В этом случае У OXI ряд должен быть как у привода, которым он управляет.
+/* esp network settings
+  The series can take values from 0 to 63, by default 0
+  OVIEW address starts with 8
+
+  When networking several drives with OXI, different rows must be specified for different drives.
+  In this case, the OXI must have the same row as the drive it controls.
 */
 
-
-
-
-
-
-/* Тип сообщения пакетов
-  пока нас интересует только CMD и INF
-  остальные глубоко не изучал и номера не проверял
-  6-й байт пакетов CMD и INF
+/* Packet message type
+  so far we are only interested in CMD and INF
+  for the rest, I did not check the numbers
+  6th byte of CMD and INF packets
 */
 enum mes_type : uint8_t {
-  CMD = 0x01,  /* номер проверен, отправка команд автоматике */
-//  LSC = 0x02,  /* работа со списками сценариев */
-//  LST = 0x03,  /* работа со списками автоматик */
-//  POS = 0x04,  /* запрос и изменение позиции автоматики */
-//  GRP = 0x05,  /* отправка команд группе автоматик с указанием битовой маски мотора */
-//  SCN = 0x06,  /* работа со сценариями */
-//  GRC = 0x07,  /* отправка команд группе автоматик, созданных через Nice Screen Configuration Tool */
-  INF = 0x08,  /* возвращает или устанавливает информацию об устройстве */
-//  LGR = 0x09,  /* работа со списками групп */
-//  CGR = 0x0A,  /* работа с категориями групп, созданных через Nice Screen Configuration Tool */
+    CMD = 0x01,  /* number verified, sending commands to automation */
+    //  LSC = 0x02,  /* working with script lists */
+    //  LST = 0x03,  /* work with automatic lists */
+    //  POS = 0x04,  /* request and change the position of automation */
+    //  GRP = 0x05,  /* sending commands to a group of automations indicating the bit mask of the motor */
+    //  SCN = 0x06,  /* working with scripts */
+    //  GRC = 0x07,  /* sending commands to a group of automations created through Nice Screen Configuration Tool */
+    INF = 0x08,  /* returns or sets device information */
+    //  LGR = 0x09,  /* working with group lists */
+    //  CGR = 0x0A,  /* work with categories of groups created through Nice Screen Configuration Tool */
 };
-
 
 
 

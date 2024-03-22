@@ -105,7 +105,7 @@ void NiceBusT4::loop() {
 
 
 
-  // разрешаем отправку каждые 100 ms
+  // autorise l'envoi toutes les 100 ms
   uint32_t now = millis();
   if (now - this->last_uart_byte_ > 100) {
     this->ready_to_tx_ = true;
@@ -222,7 +222,7 @@ bool NiceBusT4::validate_message_() {                    // проверка п�
 
   // для вывода пакета в лог
   std::string pretty_cmd = format_hex_pretty(rx_message_);
-  ESP_LOGI(TAG,  "Получен пакет: %S ", pretty_cmd.c_str() );
+  ESP_LOGI(TAG,  "Packet reçut: %S ", pretty_cmd.c_str() );
 
   // здесь что-то делаем с сообщением
   parse_status_packet(rx_message_);
@@ -238,16 +238,16 @@ bool NiceBusT4::validate_message_() {                    // проверка п�
 // разбираем полученные пакеты
 void NiceBusT4::parse_status_packet (const std::vector<uint8_t> &data) {
   if ((data[1] == 0x0d) && (data[13] == 0xFD)) { // ошибка
-    ESP_LOGE(TAG,  "Команда недоступна для этого устройства" );
+    ESP_LOGE(TAG,  "Commande non disponible pour cet appareil" );
   }
 
   if (((data[11] == 0x18) || (data[11] == 0x19)) && (data[13] == NOERR)) { // if evt
-    ESP_LOGD(TAG, "Получен пакет EVT с данными. Последняя ячейка %d ", data[12]);
+    ESP_LOGD(TAG, "Paquet EVT avec données reçues. Dernière cellule %d ", data[12]);
     std::vector<uint8_t> vec_data(this->rx_message_.begin() + 14, this->rx_message_.end() - 2);
     std::string str(this->rx_message_.begin() + 14, this->rx_message_.end() - 2);
-    ESP_LOGI(TAG,  "Строка с данными: %S ", str.c_str() );
+    ESP_LOGI(TAG,  "ligne de données: %S ", str.c_str() );
     std::string pretty_data = format_hex_pretty(vec_data);
-    ESP_LOGI(TAG,  "Данные HEX %S ", pretty_data.c_str() );
+    ESP_LOGI(TAG,  "Données HEX %S ", pretty_data.c_str() );
     // получили пакет с данными EVT, начинаем разбирать
 
     if ((data[6] == INF) && (data[9] == FOR_CU)  && (data[11] == GET - 0x80) && (data[13] == NOERR)) { // интересуют ответы на запросы GET, пришедшие без ошибок от привода
@@ -324,9 +324,9 @@ void NiceBusT4::parse_status_packet (const std::vector<uint8_t> &data) {
 
         case CUR_POS:
           if (is_walky)
-            update_position(data[15]);
+            this->update_position(data[15]);
           else
-            update_position((data[14] << 8) + data[15]);
+            this->update_position((data[14] << 8) + data[15]);
           break;
 
         case INF_STATUS:
@@ -478,27 +478,27 @@ void NiceBusT4::parse_status_packet (const std::vector<uint8_t> &data) {
 
 
 
-  //else if ((data[14] == NOERR) && (data[1] > 0x0d)) {  // иначе пакет Responce - подтверждение полученной команды
-  else if (data[1] > 0x0d) {  // иначе пакет Responce - подтверждение полученной команды
-    ESP_LOGD(TAG, "Получен пакет RSP");
+  //else if ((data[14] == NOERR) && (data[1] > 0x0d)) {  // sinon le paquet Réponse est une confirmation de la commande reçue
+  else if (data[1] > 0x0d) {  // sinon le paquet Réponse est une confirmation de la commande reçue
+    ESP_LOGD(TAG, "Paquet RSP reçu");
     std::vector<uint8_t> vec_data(this->rx_message_.begin() + 12, this->rx_message_.end() - 3);
     std::string str(this->rx_message_.begin() + 12, this->rx_message_.end() - 3);
-    ESP_LOGI(TAG,  "Строка с данными: %S ", str.c_str() );
+    ESP_LOGI(TAG,  "Chaîne de données: %S ", str.c_str() );
     std::string pretty_data = format_hex_pretty(vec_data);
-    ESP_LOGI(TAG,  "Данные HEX %S ", pretty_data.c_str() );
+    ESP_LOGI(TAG,  "Données HEX %S ", pretty_data.c_str() );
     switch (data[9]) { // cmd_mnu
       case FOR_CU:
         ESP_LOGI(TAG, "Пакет контроллера привода");
         switch (data[10] + 0x80) { // sub_inf_cmd
           case RUN:
-            ESP_LOGI(TAG, "Подменю RUN");
+            ESP_LOGI(TAG, "Sous-menu EXÉCUTER");
 			if (data[11] >= 0x80) {
 			  switch (data[11] - 0x80) {  // sub_run_cmd1
 			    case SBS:
-			      ESP_LOGI(TAG, "Команда: Пошагово");
+			      ESP_LOGI(TAG, "Commande : Pas à pas");
 			      break;
 			    case STOP:
-			      ESP_LOGI(TAG, "Команда: STOP");
+			      ESP_LOGI(TAG, "Commande : ARRÊTER");
 			      break;
 			    case OPEN:
 			      ESP_LOGI(TAG, "Команда: OPEN");
@@ -600,7 +600,7 @@ void NiceBusT4::parse_status_packet (const std::vector<uint8_t> &data) {
                 
             } // switch sub_run_cmd2
 
-            update_position((data[12] << 8) + data[13]);
+            this->update_position((data[12] << 8) + data[13]);
             break; //STA
 
           default: // sub_inf_cmd
@@ -939,7 +939,7 @@ void NiceBusT4::send_array_cmd(const uint8_t *data, size_t len) {
         snprintf(hex_buffer, sizeof(hex_buffer), "%02X ", data[i]);
         pretty_cmd += hex_buffer;
     }
-    ESP_LOGI(TAG, "Отправлено: %s", pretty_cmd.c_str());
+    ESP_LOGI(TAG, "Envoyé: %s", pretty_cmd.c_str());
 }
 
 
