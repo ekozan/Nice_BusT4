@@ -419,6 +419,14 @@ struct packet_rsp_body_t {
 
             void query_status();
 
+            enum position_hook_type : uint8_t {
+                IGNORE = 0x00,
+                STOP_UP = 0x01,
+              STOP_DOWN = 0x02
+            };
+            uint8_t position_hook_type{IGNORE};  // Флаг и позиция установки заданного положения привода
+            uint16_t position_hook_value;
+            
             void publish_state_if_changed();
 
             std::vector<uint8_t> rx_buffer;

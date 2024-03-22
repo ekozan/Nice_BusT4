@@ -17,6 +17,7 @@ namespace esphome {
         }
 
         void NiceBusT4::control(const CoverCall &call) {
+           this->position_hook_type = IGNORE;
             if (call.get_stop()) {
                 this->send_cmd(STOP);
                 this->query_status();
@@ -32,14 +33,14 @@ namespace esphome {
                             this->send_cmd(CLOSE);
                         }
                     } else {
-                      position_hook_value = (this->_pos_opn - this->_pos_cls) * pos + this->_pos_cls;
-                      ESP_LOGI(TAG, "position requise de l'actionneur: %d", position_hook_value);
+                      this->position_hook_value = (this->_pos_opn - this->_pos_cls) * pos + this->_pos_cls;
+                      ESP_LOGI(TAG, "position requise de l'actionneur: %d", this->position_hook_value);
                       
-                      if (position_hook_value > this->_pos_usl) {
-                        position_hook_type = STOP_UP;
+                      if (this->position_hook_value > this->_pos_usl) {
+                        this->position_hook_type = STOP_UP;
                         if (this->current_operation != COVER_OPERATION_OPENING) this->send_cmd(OPEN);
                       } else {
-                        position_hook_type = STOP_DOWN;
+                        this->position_hook_type = STOP_DOWN;
                         if (this->current_operation != COVER_OPERATION_CLOSING) this->send_cmd(CLOSE);
                       }
                                     
