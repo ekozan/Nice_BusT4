@@ -12,6 +12,7 @@ namespace esphome {
         CoverTraits NiceBusT4::get_traits() {
             auto traits = CoverTraits();
             traits.set_supports_position(true);
+            traits.set_supports_stop(true);
             return traits;
         }
 
@@ -723,7 +724,7 @@ namespace esphome {
             if (this->last_published_current_operation != this->current_operation
                 || this->last_published_position != this->position 
             ) {
-                this->publish_state(false);
+                this->publish_state();
                 this->last_published_current_operation = this->current_operation;
                 this->last_published_position = this->position;
             }
