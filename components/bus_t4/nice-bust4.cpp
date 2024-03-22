@@ -294,7 +294,7 @@ void NiceBusT4::parse_status_packet (const std::vector<uint8_t> &data) {
 
           }  // switch 16
           this->publish_state_if_changed();  // публикуем состояние
-          this->last_received_status_millis = millis();
+          //this->last_received_status_millis = millis();
           break; //  INF_IO
 
 
@@ -763,23 +763,23 @@ void NiceBusT4::dump_config() {    //  добавляем в  лог инфор�
   /*ESP_LOGCONFIG(TAG, "  Address: 0x%02X%02X", *this->header_[1], *this->header_[2]);*/
   switch (this->class_gate_) {
     case SLIDING:
-      this->gate_class = SLIDING;
+      this->class_gate_ = SLIDING;
       //        ESP_LOGD(TAG, "Gate type: Sliding %#X ", data[14]);
       break;
     case SECTIONAL:
-      this->gate_class = SECTIONAL;
+      this->class_gate_ = SECTIONAL;
       //        ESP_LOGD(TAG, "Gate type: Sectional %#X ", data[14]);
       break;
     case SWING:
-      this->gate_class = SWING;
+      this->class_gate_ = SWING;
       //        ESP_LOGD(TAG, "Gate type: Swing %#X ", data[14]);
       break;
     case BARRIER:
-      this->gate_class = BARRIER;
+      this->class_gate_ = BARRIER;
       //        ESP_LOGD(TAG, "Gate type: Barrier %#X ", data[14]);
       break;
     case UPANDOVER:
-      this->gate_class = UPANDOVER;
+      this->class_gate_ = UPANDOVER;
       //        ESP_LOGD(TAG, "Gate type: up-and-over %#X ", data[14]);
       break;
     default:
