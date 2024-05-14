@@ -6,7 +6,7 @@ namespace esphome {
     namespace bus_t4 {
 
         static const char *TAG = "bus_t4.cover";
-        SoftwareSerial CanSerial(2); // Utilisation de UART1 sur ESP32
+        HardwareSerial CanSerial(1); // Utilisation de UART1 sur ESP32
         using namespace esphome::cover;
 
         CoverTraits NiceBusT4::get_traits() {
