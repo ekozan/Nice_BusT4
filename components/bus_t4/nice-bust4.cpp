@@ -41,7 +41,7 @@ namespace esphome {
         }
 
         void NiceBusT4::setup() {
-            _uart = uart_init(_UART_NO, BAUD_WORK, SERIAL_8N1, SERIAL_FULL, TX_P, 256, false);
+            _uart = uart_init(2, BAUD_WORK, SERIAL_8N1, SERIAL_FULL, {rx = 16, tx = 17}, 256, false);
             delay(500);
 
             // who is online?
