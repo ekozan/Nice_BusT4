@@ -55,6 +55,9 @@ is an intelligent engine, this value is 1 (adr = 1).
 #include "esphome/core/helpers.h" // parse strings with built-in tools
 #include <queue>
 
+#define RXD2 16
+#define TXD2 17
+
 namespace esphome {
     namespace bus_t4 {
         /* for short reference to class members */
@@ -63,6 +66,7 @@ namespace esphome {
         static const int _UART_NO = 1; /* uart number */
         static const int TX_P = 1;         /* pin Tx */
         static const int RX_P = 1;         /* pin Tx */
+
         static const uint32_t BAUD_BREAK = 9200; /* baudrate for a long pulse before the packet */
         static const uint32_t BAUD_WORK = 19200; /* working baudrate */
         static const uint8_t START_CODE = 0x55; /* packet start byte */
