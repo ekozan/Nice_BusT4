@@ -77,7 +77,9 @@ namespace esphome {
             }
 
             while (CanSerial.available() > 0) {
+                ESP_LOGI(TAG, "lecture Serial");
                 uint8_t c = (uint8_t)CanSerial.read();
+                
                 this->last_received_byte_millis = millis();
                 this->handle_received_byte(c);
             }
@@ -97,6 +99,7 @@ namespace esphome {
 
         void NiceBusT4::handle_received_byte(uint8_t c) {
             this->rx_buffer.push_back(c);
+            
             if (!this->validate_received_message()) {
                 this->rx_buffer.clear();
             }
