@@ -55,7 +55,7 @@ namespace esphome {
 
         void NiceBusT4::setup() {
             
-            CanSerial.begin(BAUD_WORK, SERIAL_8N1, 16,17 );
+            Serial2.begin(BAUD_WORK, SERIAL_8N1, 16,17 );
             delay(500);
 
             // who is online?
@@ -76,9 +76,9 @@ namespace esphome {
                 }
             }
             ESP_LOGI(TAG, "lecture Serial?");
-            while (CanSerial.available() > 0) {
+            while (Serial2.available() > 0) {
                 ESP_LOGI(TAG, "Dispo");
-                uint8_t c = (uint8_t)CanSerial.read();
+                uint8_t c = (uint8_t)Serial2.read();
                 
                 this->last_received_byte_millis = millis();
                 this->handle_received_byte(c);
@@ -660,16 +660,16 @@ namespace esphome {
 
         void NiceBusT4::send_array_cmd(const uint8_t *data, size_t len) {
             char br_ch = 0x00;  // Pour le break
-            CanSerial.flush();  // Effacer le tampon de l'UART
-            CanSerial.updateBaudRate(BAUD_BREAK);  // Réduire le débit de l'UART
-            CanSerial.write((const uint8_t *)&br_ch, 1);  // Envoyer un zéro à une vitesse plus lente, un zéro long
-            while (CanSerial.availableForWrite() < 128);            
+            Serial2.flush();  // Effacer le tampon de l'UART
+            Serial2.updateBaudRate(BAUD_BREAK);  // Réduire le débit de l'UART
+            Serial2.write((const uint8_t *)&br_ch, 1);  // Envoyer un zéro à une vitesse plus lente, un zéro long
+            while (Serial2.availableForWrite() < 128);            
             delayMicroseconds(90); // add a delay to the wait, otherwise the speed will switch before sending. With a delay on d1-mini, I got the perfect signal, break = 520us
 
             // send payload itself
-            CanSerial.updateBaudRate(BAUD_WORK);  // Rétablir le débit de l'UART
-            CanSerial.write(data, len);  // Envoyer le paquet principal
-            while (CanSerial.availableForWrite() < len); // Attendre la fin de l'envoi
+            Serial2.updateBaudRate(BAUD_WORK);  // Rétablir le débit de l'UART
+            Serial2.write(data, len);  // Envoyer le paquet principal
+            while (Serial2.availableForWrite() < len); // Attendre la fin de l'envoi
 
             // print to log
             std::string pretty_cmd = format_hex_pretty((uint8_t *) &data[0], len);
