@@ -75,11 +75,8 @@ namespace esphome {
                     this->query_status();
                 }
             }
-            ESP_LOGI(TAG, "lecture Serial?");
             while (Serial2.available() > 0) {
-                ESP_LOGI(TAG, "Dispo");
                 uint8_t c = (uint8_t)Serial2.read();
-                
                 this->last_received_byte_millis = millis();
                 this->handle_received_byte(c);
             }
