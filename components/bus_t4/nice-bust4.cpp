@@ -75,9 +75,9 @@ namespace esphome {
                     this->query_status();
                 }
             }
-
+            ESP_LOGI(TAG, "lecture Serial?");
             while (CanSerial.available() > 0) {
-                ESP_LOGI(TAG, "lecture Serial");
+                ESP_LOGI(TAG, "Dispo");
                 uint8_t c = (uint8_t)CanSerial.read();
                 
                 this->last_received_byte_millis = millis();
