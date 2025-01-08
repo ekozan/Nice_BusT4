@@ -55,7 +55,7 @@ namespace esphome {
 
         void NiceBusT4::setup() {
             
-            Serial.begin(BAUD_WORK, SERIAL_8N1, 16,17 );
+            Serial.begin(BAUD_WORK, SERIAL_8N1);
             delay(500);
 
             // who is online?
